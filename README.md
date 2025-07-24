@@ -3,6 +3,10 @@
 </h1>
 
 <p align="center">
+ <strong>🎉 Accepted to ICML 2025 🎉</strong>
+</p>
+
+<p align="center">
  <a href="https://arxiv.org/abs/2412.00789">📄 Paper</a> •
  <a href="#citation">📝 Citation</a>
 </p>
@@ -16,134 +20,332 @@
 
 ---
 
-## Directory Structure
+## Quick Start
 
-- `attacks/`: Contains attack methods that are applied on the graph.
-- `framework/`: Core framework implementation and helper functions for GNN models and methods.
-- `models/`: Different GNN architectures like GCN, GAT, etc.
-- `trainers/`: Scripts for training different unlearning methods.
-- `best_params.json`: Stores the best hyperparameters for model tuning.
-- `classes_to_poison.json`: Contains victim class information for poisoning attacks.
-- `hp_tune.py`: Hyperparameter tuning script.
-- `logger.py`: Logging utility for training and unlearning.
-- `main.py`: The main script to run training, attacks, and unlearning.
-- `model_seeds.json`: Random seeds used for model reproducibility.
-- `requirements.txt`: List of dependencies required to run the project.
+### Installation (using uv - recommended)
 
-## Installation Instructions
+1. **Install uv** (if not already installed):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
-### Step 1: Create a Virtual Environment
-It's recommended to create a virtual environment to manage dependencies. The below given steps assumes prior installation of Miniconda.
+2. **Clone and setup environment**:
+   ```bash
+   git clone https://github.com/your-repo/corrective-unlearning-for-gnns
+   cd corrective-unlearning-for-gnns
+   uv sync
+   ```
 
-    conda create --name cognac_env python=3.10
-    conda activate cognac_env
+### Alternative Installation (using conda/pip)
 
-### Step 2: Install Dependencies
-Once the virtual environment is activated, install the required dependencies by running:
+1. **Create environment**:
+   ```bash
+   conda create --name cognac_env python=3.12
+   conda activate cognac_env
+   ```
 
-    pip install -r requirements.txt (or conda equivalent)
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-This will install all the necessary packages required to run the project.
+## Understanding the Evaluation Metrics
 
-## Running the Project
+Our evaluation follows the paper's methodology with two key metrics (please refer to the paper for detailed definitions):
 
-You can run the main script directly using the following command:
+### Forget Accuracy (Acc_aff)
+- **Definition**: Accuracy on the affected distribution (data that should be "forgotten")
+- **Goal**: Unlearning should **increase** this score
+- **Interpretation**: **Higher is better** - indicates better unlearning performance
 
-    python main.py [OPTIONS]
+### Utility Accuracy (Acc_rem) 
+- **Definition**: Accuracy on the remaining distribution (clean/unaffected data)
+- **Goal**: Should remain **unaffected** by unlearning
+- **Interpretation**: **Higher is better** - indicates preserved model utility
 
-Example Command:
+### Key Takeaway
+- **Forget**: Higher = Better unlearning
+- **Utility**: Higher = Better retention of original performance
+- The ideal unlearning method maximizes both metrics
 
-    python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model cacdc 
+## Reproducing Results
 
-## Arguments
+### Recommended: Automated Best Variant Selection
+**Use this script to automatically run both Cognac variants and get the best result:**
 
+```bash
+python run_cognac_best.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label
 ```
-usage: main.py [-h] [--train_ratio TRAIN_RATIO] [--val_ratio VAL_RATIO] [--attack_type {label,edge,random,trigger,label_strong}]
-               [--unlearning_model {original,gradient_ascent,gnndelete,gnndelete_ni,gif,utu,contrastive,retrain,scrub,megu,contra_2,ssd,grub,yaum,contrascent,cacdc,scrub_no_kl_combined,scrub_no_kl}]
-               [--gnn {gcn,gat,gin}] [--hidden_dim HIDDEN_DIM] [--unlearning_epochs UNLEARNING_EPOCHS] [--request {node,edge}]
-               [--edge_attack_type {random,specific}] [--df_size DF_SIZE]
-               [--dataset DATASET] [--random_seed RANDOM_SEED] [--trigger_size TRIGGER_SIZE] [--target_class TARGET_CLASS]
-               [--train_lr TRAIN_LR] [--unlearn_lr UNLEARN_LR] [--weight_decay WEIGHT_DECAY] [--optimizer OPTIMIZER] [--training_epochs TRAINING_EPOCHS]
-               [--alpha ALPHA] 
-               [--topk TOPK] [--eval_on_cpu EVAL_ON_CPU] [--iteration ITERATION] [--scale SCALE]
-               [--unlearn_iters UNLEARN_ITERS] [--scrubAlpha SCRUBALPHA] [--msteps MSTEPS] [--ascent_lr ASCENT_LR]
-               [--descent_lr DESCENT_LR] [--contrastive_epochs_1 CONTRASTIVE_EPOCHS_1] [--contrastive_epochs_2 CONTRASTIVE_EPOCHS_2]
-               [--k_hop K_HOP]
-               [--contrastive_frac CONTRASTIVE_FRAC] [--steps STEPS] [--ascent_const ASCENT_CONST] [--kappa KAPPA] [--alpha1 ALPHA1] [--alpha2 ALPHA2] 
-               [--linked]
 
-options:
-  -h, --help            show this help message and exit
-  --train_ratio TRAIN_RATIO
-                        train ratio
-  --val_ratio VAL_RATIO
-                        validation ratio
-  --attack_type {label,edge,random,trigger,label_strong}
-                        attack type
-  --unlearning_model {original,gradient_ascent,gnndelete,gnndelete_ni,gif,utu,contrastive,retrain,scrub,megu,contra_2,ssd,grub,yaum,contrascent,cacdc,scrub_no_kl_combined,scrub_no_kl}
-                        unlearning method
-  --gnn {gcn,gat,gin}   GNN architecture
-  --hidden_dim HIDDEN_DIM
-                        hidden dimension
-  --unlearning_epochs UNLEARNING_EPOCHS
-                        number of epochs to unlearn for
-  --request {node,edge}
-                        unlearning request
-  --edge_attack_type {random,specific}
-                        edge attack type
-  --df_size DF_SIZE     Forgetting Fraction
-  --dataset DATASET     dataset
-  --random_seed RANDOM_SEED
-                        random seed
-  --trigger_size TRIGGER_SIZE
-                        Poison Tensor Size
-  --target_class TARGET_CLASS
-                        class to add trigger to
-  --train_lr TRAIN_LR   initial learning rate
-  --unlearn_lr UNLEARN_LR
-                        unlearn learning rate
-  --weight_decay WEIGHT_DECAY
-                        weight decay
-  --optimizer OPTIMIZER
-                        optimizer to use
-  --training_epochs TRAINING_EPOCHS
-                        number of epochs to train
-  --alpha ALPHA         alpha in loss function
-  --topk TOPK           top k for evaluation
-  --eval_on_cpu EVAL_ON_CPU
-                        whether to evaluate on CPU
-  --iteration ITERATION
-  --scale SCALE
-  --unlearn_iters UNLEARN_ITERS
-                        number of epochs to train (default: 31)
-  --scrubAlpha SCRUBALPHA
-                        KL from og_model constant for SCRUB, higher incentivizes closeness to ogmodel
-  --msteps MSTEPS       Maximization steps on forget set for SCRUB
-  --ascent_lr ASCENT_LR
-                        Learning rate for gradient ascent steps
-  --descent_lr DESCENT_LR
-                        Learning rate for gradient descent steps
-  --contrastive_epochs_1 CONTRASTIVE_EPOCHS_1
-                        epochs for contrastive unlearning
-  --contrastive_epochs_2 CONTRASTIVE_EPOCHS_2
-                        epochs for contrastive unlearning
-  --k_hop K_HOP         number of hops for the data sampling
-  --contrastive_frac CONTRASTIVE_FRAC
-                        fraction of nodes to sample for contrastive loss
-  --steps STEPS         steps of ascent and descent
-  --ascent_const ASCENT_CONST
-                        constant for ascent
-  --kappa KAPPA
-  --alpha1 ALPHA1
-  --alpha2 ALPHA2
-  --linked              whether to use linked model
-  ```
+This script will:
+1. Run hyperparameter tuning for both `cognac` and `cognac-descent`
+2. Run main experiments for both variants
+3. Compare results and report the best performing variant
+4. Provide a clear recommendation for your specific configuration
 
-For the full list of options and their descriptions, run:
+### Manual Method (if you prefer step-by-step control)
 
-    python main.py --help
+#### Step 1: Hyperparameter Tuning (Required)
+**You must run this first** to find optimal hyperparameters:
 
-### Citation
+```bash
+python hp_tune.py --dataset Cora --gnn gcn --attack_type label --unlearning_model cognac
+```
+
+#### Step 2: Run Experiments
+After hyperparameter tuning, run the main experiments:
+
+```bash
+python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model cognac
+```
+
+### Our Method: Cognac
+We propose **Cognac**, which comes in two variants:
+- `cognac`: Full method with ascent and descent
+- `cognac-descent`: Descent-only variant
+
+**The `run_cognac_best.py` script automatically tests both and recommends the best one for your configuration.**
+
+Manual commands for individual variants:
+```bash
+# Run Cognac (full method)
+python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model cognac
+
+# Run Cognac-Descent (descent only)
+python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model cognac-descent
+``` 
+
+## Available Methods
+
+### Our Methods
+- **`cognac`**: Full Cognac method with ascent and descent phases
+- **`cognac-descent`**: Cognac descent-only variant
+
+### Baseline Methods
+- `retrain`: Complete retraining from scratch
+- `gnndelete`: GNNDelete unlearning method
+- `gradient_ascent`: Simple gradient ascent approach
+- `scrub`: SCRUB unlearning method
+- `megu`: MEGU unlearning approach
+- `ssd`: Selective Synaptic Dampening
+- `gif`: GIF 
+- `utu`: Unlink to Unlearn
+- `acdc`: Ascent-Descent
+
+## Key Arguments
+
+```bash
+python main.py [OPTIONS]
+```
+
+### Essential Arguments
+- `--dataset`: Dataset to use (e.g., `Cora`, `CiteSeer`, `PubMed`)
+- `--gnn`: GNN architecture (`gcn`, `gat`, `gin`)
+- `--attack_type`: Attack method (`label`, `edge`, `trigger`)
+- `--unlearning_model`: Unlearning method (see available methods above)
+- `--df_size`: Forgetting fraction (e.g., `0.3` for 30%)
+
+### Common Usage Examples
+```bash
+# Recommended: Automated best variant selection
+python run_cognac_best.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label
+
+# Manual: Basic Cognac run
+python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model cognac
+
+# Manual: Cognac-descent variant
+python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model cognac-descent
+
+# Baseline comparison
+python main.py --dataset Cora --gnn gcn --df_size 0.3 --attack_type label --unlearning_model retrain
+```
+
+For complete argument list, run: `python main.py --help`
+
+## Comprehensive Baselining Guide
+
+### Using the Automated Script (Recommended)
+
+The `run_cognac_best.py` script automatically finds the best Cognac variant for your configuration:
+
+```bash
+# Basic usage - minimal arguments
+python run_cognac_best.py --dataset Cora --gnn gcn --attack_type label --df_size 0.3
+
+# Full configuration for research paper reproduction
+python run_cognac_best.py \
+    --dataset Cora \
+    --gnn gcn \
+    --attack_type label \
+    --df_size 0.3 \
+    --random_seed 42 \
+    --train_ratio 0.6 \
+    --val_ratio 0.2 \
+    --hidden_dim 64 \
+    --training_epochs 1208 \
+    --unlearning_epochs 200
+
+# Different datasets and attack types
+python run_cognac_best.py --dataset CiteSeer --gnn gat --attack_type edge --df_size 0.5
+python run_cognac_best.py --dataset PubMed --gnn gin --attack_type trigger --df_size 0.2
+
+# Advanced control options
+python run_cognac_best.py --dataset Cora --gnn gcn --attack_type label --df_size 0.3 --skip-hp-tune  # Skip HP tuning
+python run_cognac_best.py --dataset Cora --gnn gcn --attack_type label --df_size 0.3 --only-compare   # Only compare existing results
+```
+
+### Manual Baselining (Step-by-Step)
+
+For researchers who want full control over each step:
+
+#### 1. Hyperparameter Tuning for Both Variants
+
+```bash
+# Tune Cognac (full method)
+python hp_tune.py \
+    --dataset Cora \
+    --gnn gcn \
+    --attack_type label \
+    --unlearning_model cognac \
+    --df_size 0.3 \
+    --random_seed 42
+
+# Tune Cognac-Descent (descent only)
+python hp_tune.py \
+    --dataset Cora \
+    --gnn gcn \
+    --attack_type label \
+    --unlearning_model cognac-descent \
+    --df_size 0.3 \
+    --random_seed 42
+```
+
+#### 2. Run Main Experiments for Both Variants
+
+```bash
+# Run Cognac (full method)
+python main.py \
+    --dataset Cora \
+    --gnn gcn \
+    --attack_type label \
+    --unlearning_model cognac \
+    --df_size 0.3 \
+    --random_seed 42 \
+    --train_ratio 0.6 \
+    --val_ratio 0.2 \
+    --hidden_dim 64 \
+    --training_epochs 1208 \
+    --unlearning_epochs 200
+
+# Run Cognac-Descent (descent only)
+python main.py \
+    --dataset Cora \
+    --gnn gcn \
+    --attack_type label \
+    --unlearning_model cognac-descent \
+    --df_size 0.3 \
+    --random_seed 42 \
+    --train_ratio 0.6 \
+    --val_ratio 0.2 \
+    --hidden_dim 64 \
+    --training_epochs 1208 \
+    --unlearning_epochs 200
+```
+
+#### 3. Compare with Baseline Methods
+
+```bash
+# Retrain baseline
+python hp_tune.py --dataset Cora --gnn gcn --attack_type label --unlearning_model retrain --df_size 0.3
+python main.py --dataset Cora --gnn gcn --attack_type label --unlearning_model retrain --df_size 0.3
+
+# GNNDelete baseline
+python hp_tune.py --dataset Cora --gnn gcn --attack_type label --unlearning_model gnndelete --df_size 0.3
+python main.py --dataset Cora --gnn gcn --attack_type label --unlearning_model gnndelete --df_size 0.3
+
+# SCRUB baseline
+python hp_tune.py --dataset Cora --gnn gcn --attack_type label --unlearning_model scrub --df_size 0.3
+python main.py --dataset Cora --gnn gcn --attack_type label --unlearning_model scrub --df_size 0.3
+
+# MEGU baseline
+python hp_tune.py --dataset Cora --gnn gcn --attack_type label --unlearning_model megu --df_size 0.3
+python main.py --dataset Cora --gnn gcn --attack_type label --unlearning_model megu --df_size 0.3
+```
+
+### Complete Experimental Pipeline
+
+For comprehensive evaluation across multiple settings:
+
+```bash
+# Multiple datasets
+for dataset in Cora CiteSeer PubMed; do
+    python run_cognac_best.py --dataset $dataset --gnn gcn --attack_type label --df_size 0.3
+done
+
+# Multiple attack types
+for attack in label edge trigger; do
+    python run_cognac_best.py --dataset Cora --gnn gcn --attack_type $attack --df_size 0.3
+done
+
+# Multiple forgetting fractions
+for df_size in 0.1 0.3 0.5; do
+    python run_cognac_best.py --dataset Cora --gnn gcn --attack_type label --df_size $df_size
+done
+
+# Multiple GNN architectures
+for gnn in gcn gat gin; do
+    python run_cognac_best.py --dataset Cora --gnn $gnn --attack_type label --df_size 0.3
+done
+
+# Multiple random seeds for statistical significance
+for seed in 42 123 456 789 999; do
+    python run_cognac_best.py --dataset Cora --gnn gcn --attack_type label --df_size 0.3 --random_seed $seed
+done
+```
+
+### Expected Output Structure
+
+Results will be saved in the following structure:
+```
+logs/default/
+├── Cora/
+│   ├── run_logs_label_0.3_42.json      # Main results
+│   ├── run_logs_label_0.3_123.json     # Different seed
+│   └── ...
+├── CiteSeer/
+│   └── ...
+└── PubMed/
+    └── ...
+
+hp_tuning/
+└── hp_tuning.db                        # Hyperparameter optimization results
+
+best_params.json                        # Best hyperparameters for each configuration
+```
+
+### Key Metrics to Compare
+
+When baselining, focus on these metrics from the log files:
+- **Test Accuracy**: Overall model performance
+- **Forget Accuracy**: Performance on nodes that should be forgotten
+- **Utility Accuracy**: Performance on remaining nodes
+- **F1 Scores**: For imbalanced datasets
+- **Training Time**: Computational efficiency
+
+## Project Structure
+
+- `attacks/`: Graph attack implementations
+- `framework/`: Core utilities and training arguments
+- `models/`: GNN architectures (GCN, GAT, GIN)
+- `trainers/`: Unlearning method implementations
+- `hp_tune.py`: **Required** hyperparameter optimization
+- `main.py`: Main experiment runner
+- `run_cognac_best.py`: **Recommended** automated script to find best Cognac variant
+- `pyproject.toml`: uv project configuration
+- `requirements.txt`: Alternative dependency list
+
+## Citation
+
 ```bibtex
 @misc{kolipaka2024cognacshotforgetbad,
      title={A Cognac shot to forget bad memories: Corrective Unlearning in GNNs}, 
@@ -155,3 +357,12 @@ For the full list of options and their descriptions, run:
      url={https://arxiv.org/abs/2412.00789}, 
 }
 ```
+
+## Notes
+
+- **Hyperparameter tuning is mandatory** before running experiments
+- **Use `run_cognac_best.py` for automatic best variant selection** (recommended)
+- For manual runs, test both `cognac` and `cognac-descent` variants for fair comparison
+- Results are stored in the `logs/` directory
+- The project uses uv for modern Python dependency management
+- GPU is recommended for faster training

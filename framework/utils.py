@@ -13,24 +13,19 @@ from sklearn.manifold import TSNE
 from torch_geometric.utils import subgraph
 
 
-from trainers.contrascent import ContrastiveAscentTrainer
-from trainers.contrascent_no_link import ContrastiveAscentNoLinkTrainer
-from trainers.contrast import ContrastiveUnlearnTrainer
-from trainers.contrast_another import ContrastiveUnlearnTrainer_NEW
+from trainers.cognac import CognacTrainer
+from trainers.cognac_only_descent import CognacDescentTrainer
 from trainers.gnndelete import GNNDeleteNodeembTrainer
 from trainers.gnndelete_ni import GNNDeleteNITrainer
 from trainers.gradient_ascent import GradientAscentTrainer
 from trainers.gif import GIFTrainer
 from trainers.base import Trainer
 from trainers.scrub import ScrubTrainer
-from trainers.scrub_no_kl import ScrubTrainer1
-from trainers.scrub_no_kl_combined import ScrubTrainer2
 from trainers.ssd import SSDTrainer
 from trainers.utu import UtUTrainer
 from trainers.retrain import RetrainTrainer
 from trainers.megu import MeguTrainer
-from trainers.grub import GrubTrainer
-from trainers.yaum import YAUMTrainer
+from trainers.acdc import ACDCTrainer
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -206,18 +201,13 @@ def get_trainer(args, poisoned_model, poisoned_data, optimizer_unlearn) -> Train
         "gnndelete_ni": GNNDeleteNITrainer,
         "gif": GIFTrainer,
         "utu": UtUTrainer,
-        "contrastive": ContrastiveUnlearnTrainer,
-        'contra_2': ContrastiveUnlearnTrainer_NEW,
         "retrain": RetrainTrainer,
         "scrub": ScrubTrainer,
         "megu": MeguTrainer,
         "ssd": SSDTrainer,
-        "grub": GrubTrainer,
-        "yaum": YAUMTrainer,
-        "contrascent": ContrastiveAscentTrainer,
-        'cacdc': ContrastiveAscentNoLinkTrainer,
-        "scrub_no_kl": ScrubTrainer1,
-        "scrub_no_kl_combined": ScrubTrainer2
+        "acdc": ACDCTrainer,
+        'cognac': CognacTrainer,
+        'cognac-descent': CognacDescentTrainer,
     }
 
     if args.unlearning_model in trainer_map:

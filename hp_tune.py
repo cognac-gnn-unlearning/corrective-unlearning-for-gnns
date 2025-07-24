@@ -300,7 +300,7 @@ hp_tuning_params_dict = {
         "contrastive_frac": (0.01, 0.2, "float"),
         "k_hop": (1, 2, "int"),
     },
-    "contra_2": {
+    "cognac-descent": {
         "contrastive_epochs_1": (1, 10, "int"),
         "contrastive_epochs_2": (1, 30, "int"),
         "steps": (1, 10, "int"),
@@ -314,21 +314,7 @@ hp_tuning_params_dict = {
         "descent_lr": (1e-4, 1e-1, "log"),
         # "scrubAlpha": (1e-6, 10, "log"),
     },
-    "contrascent": {
-        "contrastive_epochs_1": (1, 5, "int"),
-        "contrastive_epochs_2": (1, 5, "int"),
-        "steps": (1, 15, "int"),
-        # "maximise_epochs": (5, 30, "int"),
-        "unlearn_lr": (1e-5, 1e-1, "log"),
-        "contrastive_margin": (1, 10, "log"),
-        # "contrastive_lambda": (0.0, 1.0, "float"),
-        "contrastive_frac": (0.01, 0.2, "float"),
-        "k_hop": (1, 3, "int"),
-        "ascent_lr": (1e-5, 1e-3, "log"),
-        "descent_lr": (1e-5, 1e-1, "log"),
-        "scrubAlpha": (1e-6, 10, "log"),
-    },
-    "cacdc": {
+    "cognac": {
         "contrastive_epochs_1": (1, 6, "int"),
         "contrastive_epochs_2": (1, 30, "int"),
         "steps": (1, 10, "int"),
@@ -367,7 +353,7 @@ hp_tuning_params_dict = {
         "msteps": (1, 20, "int"),
         # 'weight_decay': (1e-5, 1e-1, "log"),
     },
-    "yaum": {
+    "acdc": {
         "unlearn_iters": (10, 300, "int"),
         # 'kd_T': (1, 10, "float"),
         "ascent_lr": (1e-5, 1e-3, "log"),
@@ -500,6 +486,9 @@ if __name__ == "__main__":
         model.load_state_dict(poisoned_model.state_dict())
 
     objective_func = partial(objective, model=model, data=poisoned_data)
+    
+    # Create a directory for hyperparameter tuning results
+    os.makedirs("hp_tuning", exist_ok=True)
 
     print("==HYPERPARAMETER TUNING==")
     # Create a study with TPE sampler
@@ -508,7 +497,7 @@ if __name__ == "__main__":
         direction="maximize",
         study_name=f"{args.gnn}_{args.dataset}_{args.attack_type}_{args.df_size}_{args.unlearning_model}_{args.random_seed}_{class_dataset_dict[args.dataset]['class1']}_{class_dataset_dict[args.dataset]['class2']}",
         load_if_exists=True,
-        storage=f"sqlite:///hp_tuning/new/{args.db_name}.db",
+        storage=f"sqlite:///hp_tuning/{args.db_name}.db",
     )
 
     print("==OPTIMIZING==")
@@ -517,10 +506,33 @@ if __name__ == "__main__":
 
     # reduce trials for utu and contrastive
     if args.unlearning_model == "utu":
-        study.optimize(objective_func, n_trials=1)
+        study.optimize(objective_func, n_trials=1) # type: ignore
     elif args.unlearning_model == "retrain":
-        study.optimize(objective_func, n_trials=30)
-    # elif args.unlearning_model == "contrastive" or args.unlearning_model == "contra_2":
-    #     study.optimize(objective_func, n_trials=200)
+        study.optimize(objective_func, n_trials=30) # type: ignore
     else:
-        study.optimize(objective_func, n_trials=100)
+        study.optimize(objective_func, n_trials=100) # type: ignore
+        
+    # once study is run, save the best trial params in best_params.json
+    best_trial = study.best_trial
+    best_params = best_trial.params
+    
+    print(args.experiment_name)
+    
+    #create the json file if it doesn't exist
+    if not os.path.exists("best_params.json"):
+        with open("best_params.json", "w") as f:
+            json.dump({}, f, indent=4)
+
+    with open("best_params.json", "r") as f:
+        data = json.load(f)
+    
+    with open("best_params.json", "w") as f:
+        if args.unlearning_model not in data:
+            data[args.unlearning_model] = {}
+        if args.experiment_name not in data[args.unlearning_model]:
+            data[args.unlearning_model][args.experiment_name] = {}
+
+        data[args.unlearning_model][args.experiment_name] = best_params
+        
+        json.dump(data, f, indent=4)
+        print(f"Best params saved to best_params.json for {args.unlearning_model} - {args.experiment_name}")

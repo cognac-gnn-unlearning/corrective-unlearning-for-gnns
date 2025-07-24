@@ -337,8 +337,13 @@ if __name__ == "__main__":
 
     poisoned_data, poisoned_indices, poisoned_model = poison(clean_data)
     # load best params file
-    with open("best_params.json", "r") as f:
-        d = json.load(f)
+    try:
+        with open("best_params.json", "r") as f:
+            d = json.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "best_params.json file not found. Please run hp_tune.py first to generate this file."
+        )
 
     if args.corrective_frac < 1:
         print("==POISONING CORRECTIVE==")
@@ -360,7 +365,9 @@ if __name__ == "__main__":
     try:
         params = d[args.unlearning_model][args.experiment_name]
     except:
-        params = {}
+        raise ValueError(
+            f"Parameters for {args.unlearning_model} with experiment name {args.experiment_name} not found in best_params.json. It is highly recommended to run hp_tune.py first to get the best parameters."
+        )
     print(params)
 
     # set args
