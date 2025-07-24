@@ -1,5 +1,5 @@
 <h1 align="center">
- A <i>Cognac</i> Shot To Forget Bad Memories: Corrective Unlearning in GNNs [ICML 2025]
+ A <i>Cognac</i> Shot To Forget Bad Memories: Corrective Unlearning for GNNs [ICML 2025]
 </h1>
 
 <p align="center">
